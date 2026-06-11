@@ -1,11 +1,13 @@
 import datetime
 import random
+import boto3
+from botocore.exceptions import NoCredentialsError
 
 import altair as alt
 import numpy as np
 import pandas as pd
 import streamlit as st
-
+    
 st.set_page_config(page_title="개발 요청 티켓", page_icon="🎫")
 st.title("🎫 개발 요청 티켓")
 st.write(
@@ -19,6 +21,23 @@ if "df" not in st.session_state:
     df = pd.DataFrame(columns=["ID", "서비스 대상", "요청 유형", "내용", "상태", "우선순위", "제출일"])
     st.session_state.df = df
 
+def upload_image_to_s3(file, ticket_id):
+    s3 = boto3.client(
+        "s3",
+        region_name="ap-northeast-2",
+        aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
+    )
+    bucket = "shakalaka-maintenance"
+    key = f"support-tickets/{ticket_id}/{file.name}"
+    try:
+        s3.upload_fileobj(file, bucket, key)
+        url = f"https://{bucket}.s3.ap-northeast-2.amazonaws.com/{key}"
+        return url
+    except NoCredentialsError:
+        st.error("AWS 자격증명을 확인해주세요.")
+        return None
+    
 # 사용법 안내
 with st.expander("📖 사용법 안내"):
     st.markdown(
@@ -49,6 +68,7 @@ with st.form("add_ticket_form"):
     request_type = st.selectbox("요청 유형", ["버그", "기능 개선", "신규 개발", "기타"])
     priority = st.selectbox("우선순위", ["높음", "중간", "낮음"])
     issue = st.text_area("내용 (증상, 재현 방법, 기대 동작 등을 상세히 작성해주세요)")
+    uploaded_file = st.file_uploader("이미지 첨부 (선택)", type=["png", "jpg", "jpeg", "gif", "webp"])
     submit_date = st.date_input("제출일", value=datetime.date.today())
     submitted = st.form_submit_button("제출")
 
@@ -63,6 +83,11 @@ if submitted:
             new_id = f"TICKET-{recent_number + 1}"
 
         today = submit_date.strftime("%Y-%m-%d")
+
+        image_url = None
+        if uploaded_file is not None:
+            image_url = upload_image_to_s3(uploaded_file, new_id)
+
         df_new = pd.DataFrame([{
             "ID": new_id,
             "서비스 대상": service,
@@ -71,6 +96,7 @@ if submitted:
             "상태": "접수",
             "우선순위": priority,
             "제출일": today,
+            "이미지 URL": image_url if image_url else "",
         }])
 
         st.success("티켓이 등록되었습니다!")
@@ -103,8 +129,13 @@ else:
                 options=["높음", "중간", "낮음"],
                 required=True,
             ),
+            "이미지 URL": st.column_config.LinkColumn(
+                "이미지",
+                help="첨부 이미지 링크",
+                display_text="보기",
+            ),
         },
-        disabled=["ID", "서비스 대상", "요청 유형", "내용", "제출일"],
+        disabled=["ID", "서비스 대상", "요청 유형", "내용", "제출일", "이미지 URL"],
     )
 
     # 통계 섹션
