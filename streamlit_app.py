@@ -65,10 +65,10 @@ def get_next_ticket_id():
 if "df" not in st.session_state:
     st.session_state.df = load_all_tickets()
 
-def upload_image_to_s3(file, ticket_id):
+def upload_image_to_s3(file, ticket_id, index):
     s3 = get_s3_client()
     ext = file.name.rsplit(".", 1)[-1] if "." in file.name else "png"
-    key = f"support-tickets/images/{ticket_id}.{ext}"
+    key = f"support-tickets/images/{ticket_id}_{index}.{ext}"
     try:
         s3.upload_fileobj(file, S3_BUCKET, key)
         url = f"https://{S3_BUCKET}.s3.ap-northeast-2.amazonaws.com/{key}"
@@ -81,9 +81,9 @@ def upload_image_to_s3(file, ticket_id):
 with st.expander("📖 사용법 안내"):
     st.markdown(
         """
-        **티켓 작성 방법**
-        0. **작성자** 입력: 본인 이름을 입력합니다.
-        1. **서비스 대상** 선택: 요청이 해당하는 서비스를 선택합니다.
+        **티켓 작성 방법**  
+        0. **작성자** 입력: 본인 이름을 입력합니다.  
+        1. **서비스 대상** 선택: 요청이 해당하는 서비스를 선택합니다.  
             - `sklk-사용자` : Shakalaka 앱 (사용자 화면, shakalaka.kr)
             - `sklk-관리자` : Shakalaka 앱 (관리자/운영 화면, admin.shakalaka.kr)
             - `mgmt` : Shakalaka management (mgmt.shakalaka.kr)
@@ -110,7 +110,7 @@ with st.form("add_ticket_form"):
     request_type = st.selectbox("요청 유형", ["버그", "기능 개선", "신규 개발", "기타"])
     priority = st.selectbox("우선순위", ["높음", "중간", "낮음"])
     issue = st.text_area("내용 (증상, 재현 방법, 기대 동작 등을 상세히 작성해주세요~)")
-    uploaded_file = st.file_uploader("이미지 첨부 (선택)", type=["png", "jpg", "jpeg"])
+    uploaded_files = st.file_uploader("이미지 첨부 (선택, 다중 첨부 가능)", type=["png", "jpg", "jpeg", "gif", "webp"], accept_multiple_files=True)
     submit_date = st.date_input("제출일", value=datetime.date.today())
     submitted = st.form_submit_button("제출")
 
@@ -123,9 +123,11 @@ if submitted:
         new_id = get_next_ticket_id()
         today = submit_date.strftime("%Y-%m-%d")
 
-        image_url = None
-        if uploaded_file is not None:
-            image_url = upload_image_to_s3(uploaded_file, new_id)
+        image_urls = []
+        for idx, file in enumerate(uploaded_files):
+            url = upload_image_to_s3(file, new_id, idx + 1)
+            if url:
+                image_urls.append(url)
 
         new_ticket = {
             "ID": new_id,
@@ -136,7 +138,7 @@ if submitted:
             "상태": "접수",
             "우선순위": priority,
             "제출일": today,
-            "이미지 URL": image_url if image_url else "",
+            "이미지 URL": ", ".join(image_urls),
         }
 
         save_ticket(new_ticket)
