@@ -44,7 +44,8 @@ with st.expander("📖 사용법 안내"):
         """
         **티켓 작성 방법**
         1. **서비스 대상** 선택: 요청이 해당하는 서비스를 선택합니다.
-            - `sklk` : Shakalaka 앱의 사용자 및 관리자 페이지 (shakalaka.kr / admin.shakalaka.kr)
+            - `sklk-사용자` : Shakalaka 앱 (사용자 화면, shakalaka.kr)
+            - `sklk-관리자` : Shakalaka 앱 (관리자/운영 화면, admin.shakalaka.kr)
             - `mgmt` : Shakalaka management (mgmt.shakalaka.kr)
             - `내부운영도구` : 대시보드 등 앱을 제외한 별도 기능을 하는 내부 도구
         2. **요청 유형** 선택: 요청의 성격을 선택합니다.
@@ -64,7 +65,7 @@ with st.expander("📖 사용법 안내"):
 st.header("티켓 등록")
 
 with st.form("add_ticket_form"):
-    service = st.selectbox("서비스 대상", ["sklk", "mgmt", "내부운영도구"])
+    service = st.selectbox("서비스 대상", ["sklk-사용자", "sklk-관리자", "mgmt", "내부운영도구"])
     request_type = st.selectbox("요청 유형", ["버그", "기능 개선", "신규 개발", "기타"])
     priority = st.selectbox("우선순위", ["높음", "중간", "낮음"])
     issue = st.text_area("내용 (증상, 재현 방법, 기대 동작 등을 상세히 작성해주세요)")
