@@ -165,7 +165,25 @@ else:
         st.session_state.df,
         use_container_width=True,
         hide_index=True,
-        column_config={...},
+        column_config={
+            "상태": st.column_config.SelectboxColumn(
+                "상태",
+                help="티켓 처리 상태",
+                options=["접수", "처리 중", "보류", "완료"],
+                required=True,
+            ),
+            "우선순위": st.column_config.SelectboxColumn(
+                "우선순위",
+                help="처리 우선순위",
+                options=["높음", "중간", "낮음"],
+                required=True,
+            ),
+            "이미지 URL": st.column_config.LinkColumn(
+                "이미지",
+                help="첨부 이미지 링크",
+                display_text="보기",
+            ),
+        },
         disabled=["ID", "작성자", "서비스 대상", "요청 유형", "내용", "제출일", "이미지 URL"],
     )
 
