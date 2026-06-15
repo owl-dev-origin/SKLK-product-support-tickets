@@ -189,6 +189,21 @@ else:
         disabled=["ID", "작성자", "서비스 대상", "요청 유형", "내용", "제출일", "이미지 URL"],
     )
 
+    # 이미지 미리보기
+    image_tickets = edited_df[edited_df["이미지 URL"].fillna("").str.strip() != ""]
+    if len(image_tickets) > 0:
+        st.write("##### 첨부 이미지 보기")
+        selected_id = st.selectbox(
+            "티켓 선택",
+            image_tickets["ID"].tolist(),
+            key="image_preview_select"
+        )
+        urls = image_tickets[image_tickets["ID"] == selected_id]["이미지 URL"].values[0]
+        url_list = [u.strip() for u in urls.split(",") if u.strip()]
+        st.image(url_list, width=200)
+        
+    image_tickets = edited_df[edited_df["이미지 URL"].fillna("").str.strip() != ""]
+    
     if not edited_df.equals(st.session_state.df):
         changed_rows = edited_df[
             (edited_df["상태"] != st.session_state.df["상태"])
