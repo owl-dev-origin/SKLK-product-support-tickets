@@ -244,10 +244,15 @@ else:
         "기타": "#808080",
     }
     STATUS_COLORS = {
-        "접수": "#ED8D51",
-        "처리 중": "#6A5667",
-        "보류": "#9F6C5E",
-        "완료": "#444770",
+        "접수": "#FFFFE3",
+        "처리 중": "#DBD4FF",
+        "보류": "#808034",
+        "완료": "#723480",
+    }
+    PRIORITY_COLORS = {
+        "낮음": "#82C8E5",
+        "중간": "#FFEB3B",
+        "높음": "#F88379",
     }
     
     st.write("##### 서비스 대상별 요청 유형")
@@ -277,7 +282,16 @@ else:
         chart2 = (
             alt.Chart(edited_df)
             .mark_arc()
-            .encode(theta="count():Q", color="우선순위:N")
+            .encode(
+                theta="count():Q",
+                color=alt.Color(
+                    "우선순위:N",
+                    scale=alt.Scale(
+                        domain=list(PRIORITY_COLORS.keys()),
+                        range=list(PRIORITY_COLORS.values()),
+                    ),
+                ),
+            )
             .properties(height=300)
             .configure_legend(orient="bottom", titleFontSize=13, labelFontSize=13)
         )
