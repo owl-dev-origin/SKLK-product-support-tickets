@@ -227,35 +227,78 @@ else:
     # 통계 섹션
     st.header("통계")
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     num_open = len(edited_df[edited_df["상태"] == "접수"])
     num_in_progress = len(edited_df[edited_df["상태"] == "처리 중"])
+    num_hold = len(edited_df[edited_df["상태"] == "보류"])
     num_closed = len(edited_df[edited_df["상태"] == "완료"])
     col1.metric(label="접수", value=num_open)
     col2.metric(label="처리 중", value=num_in_progress)
-    col3.metric(label="완료", value=num_closed)
+    col3.metric(label="보류", value=num_hold)
+    col4.metric(label="완료", value=num_closed)
 
-    st.write("")
+    REQUEST_TYPE_COLORS = {
+        "버그": "#FF4808",
+        "기능 개선": "#3EFFB3",
+        "신규 개발": "#84C9FF",
+        "기타": "#808080",
+    }
+    STATUS_COLORS = {
+        "접수": "#ED8D51",
+        "처리 중": "#6A5667",
+        "보류": "#9F6C5E",
+        "완료": "#444770",
+    }
+    
     st.write("##### 서비스 대상별 요청 유형")
     chart1 = (
         alt.Chart(edited_df)
         .mark_bar()
         .encode(
-            x=alt.X("서비스 대상:N", title="서비스 대상"),
+            x=alt.X("서비스 대상:N", title="서비스 대상", axis=alt.Axis(labelAngle=0)),
             y=alt.Y("count():Q", title="티켓 수"),
             xOffset="요청 유형:N",
-            color="요청 유형:N",
+            color=alt.Color(
+                "요청 유형:N",
+                scale=alt.Scale(
+                    domain=list(REQUEST_TYPE_COLORS.keys()),
+                    range=list(REQUEST_TYPE_COLORS.values()),
+                ),
+            ),
         )
         .configure_legend(orient="bottom", titleFontSize=13, labelFontSize=13)
     )
     st.altair_chart(chart1, use_container_width=True, theme="streamlit")
 
-    st.write("##### 우선순위 분포")
-    chart2 = (
-        alt.Chart(edited_df)
-        .mark_arc()
-        .encode(theta="count():Q", color="우선순위:N")
-        .properties(height=300)
-        .configure_legend(orient="bottom", titleFontSize=13, labelFontSize=13)
-    )
-    st.altair_chart(chart2, use_container_width=True, theme="streamlit")
+    col_chart1, col_chart2 = st.columns(2)
+
+    with col_chart1:
+        st.write("##### 우선순위 분포")
+        chart2 = (
+            alt.Chart(edited_df)
+            .mark_arc()
+            .encode(theta="count():Q", color="우선순위:N")
+            .properties(height=300)
+            .configure_legend(orient="bottom", titleFontSize=13, labelFontSize=13)
+        )
+        st.altair_chart(chart2, use_container_width=True, theme="streamlit")
+
+    with col_chart2:
+        st.write("##### 상태 분포")
+        chart3 = (
+            alt.Chart(edited_df)
+            .mark_arc()
+            .encode(
+                theta="count():Q",
+                color=alt.Color(
+                    "상태:N",
+                    scale=alt.Scale(
+                        domain=list(STATUS_COLORS.keys()),
+                        range=list(STATUS_COLORS.values()),
+                    ),
+                ),
+            )
+            .properties(height=300)
+            .configure_legend(orient="bottom", titleFontSize=13, labelFontSize=13)
+        )
+        st.altair_chart(chart3, use_container_width=True, theme="streamlit")
