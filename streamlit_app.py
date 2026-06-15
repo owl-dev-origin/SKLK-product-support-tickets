@@ -170,7 +170,7 @@ else:
     )
     
     edited_df = st.data_editor(
-        st.session_state.df,
+        display_df,
         use_container_width=True,
         hide_index=True,
         column_config={
@@ -195,7 +195,6 @@ else:
     )
 
     # 이미지 미리보기
-    image_tickets = st.session_state.df[st.session_state.df["이미지 URL"].fillna("").str.strip() != ""]
     if len(image_tickets) > 0:
         st.write("##### 첨부 이미지 보기")
         selected_id = st.selectbox(
